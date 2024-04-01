@@ -4,6 +4,6 @@ dotnet restore
 
 or
 
-nuget restore Assignment1.sln
+nuget restore Assignment2.sln
 
 to install all necessary packages
