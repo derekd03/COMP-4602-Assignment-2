@@ -1,0 +1,58 @@
+@rendermode InteractiveServer
+@inject Assignment2.Data.ApplicationDbContext _context
+@using Microsoft.EntityFrameworkCore;
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+@code {
+    bool isAdmin;
+    Reservation? userReservation = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserManager.GetUserAsync((await AuthenticationStateProvider.GetAuthenticationStateAsync()).User);
+
+        if (user != null)
+        {
+            var userId = user.Id;
+            userReservation = _context.Reservation.FirstOrDefault(r => r.ReserverId == userId);
+
+            // Check if user is admin
+            isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
+        }
+    }
+}
+<ul class="navbar-nav flex-grow-1">
+    <li class="nav-item">
+        <a class="nav-link text-dark" href="/">Home</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" href="/Home/Books">Books</a>
+    </li>
+    @if (isAdmin)
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="/Book/Index">Manage Books</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="/Reservation/Index">Manage Reservations</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="/User/Index">Manage Users</a>
+        </li>
+    }
+    @if (userReservation != null)
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="/Reservation/Current">
+                <text>Your Reservation</text>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" href="/Reservation/Return/@userReservation.Id">Return Book</a>
+        </li>
+    }
+</ul>

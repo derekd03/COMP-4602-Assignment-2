@@ -1,0 +1,90 @@
+@rendermode InteractiveServer
+@inject Assignment2.Data.ApplicationDbContext _context
+@using Microsoft.EntityFrameworkCore;
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+@code {
+    List<Book> bookList = new List<Book>();
+    IQueryable<Book> books = new List<Book>().AsQueryable();
+    PaginationState pagination = new PaginationState { ItemsPerPage = 10 };
+    GridSort<Book> sortByName = GridSort<Book>.ByAscending(_ => _.Title);
+    bool userHasReservation = false;
+    bool isMember = false;
+    bool isAdmin = false;
+    string? filter;
+    IQueryable<Book> FilteredBooks
+    {
+        get
+        {
+            var result = books;
+
+            // Automatically filter by title or author
+            if (!string.IsNullOrEmpty(filter))
+            {
+                result = result.Where(c => c.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase) ||
+                c.Author.Contains(filter, StringComparison.CurrentCultureIgnoreCase));
+            }
+
+            return result;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserManager.GetUserAsync((await AuthenticationStateProvider.GetAuthenticationStateAsync()).User);
+
+        // Get the status of whether the user has a reservation
+        if (user != null)
+        {
+            userHasReservation = await _context.Reservation.AnyAsync(r => r.ReserverId == user.Id);
+            isMember = await UserManager.IsInRoleAsync(user, "Member");
+            isAdmin = await UserManager.IsInRoleAsync(user, "Admin");
+        }
+
+        bookList = await _context.Book.ToListAsync();
+        books = bookList.AsQueryable();
+    }
+}
+
+<PageTitle>Books</PageTitle>
+<h1>Books</h1>
+<div class="search-box">
+    <input class="form-control" autofocus @bind="filter" @bind:event="oninput"
+        placeholder="Filter by title or author..." />
+</div>
+<br>
+<div class="table-container">
+    <QuickGrid Items="@FilteredBooks" Pagination="@pagination" class="table-active">
+        <PropertyColumn Property="@(_ => _.Title)" Sortable="true" />
+        <PropertyColumn Property="@(_ => _.CodeNumber)" Sortable="true" />
+        <PropertyColumn Property="@(_ => _.Author)" Sortable="true" />
+        <PropertyColumn Property="@(_ => _.YearPublished)" Sortable="true" />
+        <PropertyColumn Property="@(_ => _.Quantity)" Sortable="true" />
+        <TemplateColumn SortBy="@sortByName">
+            <div class="flex items-center">
+                <nobr>
+                    <!-- Display the reserve button if the user doesn't have a reservation -->
+                    <!-- If the book is in stock -->
+                    <!-- And if the user has the member or admin role -->
+                    @if (!userHasReservation && context.Quantity > 0 && (isMember || isAdmin))
+                    {
+                        <a href="/Reservation/Confirmation?bookCodeNumber=@context.CodeNumber"
+                            class="btn btn-primary">Reserve</a>
+                    }
+                </nobr>
+            </div>
+        </TemplateColumn>
+    </QuickGrid>
+</div>
+<Paginator State="@pagination" />
+
+<style>
+    .table-container {
+        height: 500px;
+        overflow-y: auto;
+    }
+</style>

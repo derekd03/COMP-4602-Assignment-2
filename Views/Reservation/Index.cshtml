@@ -1,0 +1,97 @@
+@model IEnumerable<Assignment2.Models.Reservation>
+@inject Assignment2.Data.ApplicationDbContext _context
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ReserverId)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BookCodeNumber)
+            </th>
+            <th>
+                Title
+            </th>
+            <th>
+                Author
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReservationDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EstimatedDeliveryDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ReturnDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Fees)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AdminComment)
+            </th>
+            <th>
+                Overdue?
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReserverId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BookCodeNumber)
+                </td>
+                <td>
+                    @(_context.Book.Find(item.BookCodeNumber)?.Title)
+                </td>
+                <td>
+                    @(_context.Book.Find(item.BookCodeNumber)?.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReservationDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EstimatedDeliveryDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReturnDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Fees)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.AdminComment)
+                </td>
+                <td>
+                    @if (item.EstimatedDeliveryDate < DateTime.Now)
+                    {
+                        <span class="text-danger">Overdue <i class="fas fa-check"></i></span>
+                    }
+                    else
+                    {
+                        <span class="text-success">Not Overdue <i class="fas fa-times"></i></span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

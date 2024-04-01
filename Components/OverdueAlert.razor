@@ -1,0 +1,34 @@
+@rendermode InteractiveServer
+@inject Assignment2.Data.ApplicationDbContext _context
+@using Microsoft.EntityFrameworkCore;
+@using Microsoft.AspNetCore.Identity;
+@using Microsoft.AspNetCore.Components.Authorization;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject UserManager<ApplicationUser> UserManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider;
+
+@code {
+    Reservation? userReservation = null;
+    ApplicationUser? user = null;
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManager.GetUserAsync((await AuthenticationStateProvider.GetAuthenticationStateAsync()).User);
+
+        if (user != null)
+        {
+            var userId = user.Id;
+            userReservation = _context.Reservation.FirstOrDefault(r => r.ReserverId == userId);
+        }
+    }
+}
+
+@if (userReservation != null && userReservation.ReturnDate < DateTime.Now)
+{
+    <RadzenAlert AllowClose="false" AlertStyle="AlertStyle.Danger" ShowIcon="false" Variant="Variant.Flat"
+        Shade="Shade.Lighter">
+        FROM: ZENITH LIBRARY<br>
+        TO: @user?.Email<br>
+        SUBJECT: Overdue Book<br>
+        MESSAGE: You have an overdue book. Please return it as soon as possible
+    </RadzenAlert>
+}

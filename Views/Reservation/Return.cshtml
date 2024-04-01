@@ -1,0 +1,39 @@
+@model Assignment2.Models.Reservation
+@inject Assignment2.Data.ApplicationDbContext _context
+@{
+    ViewData["Title"] = "Return";
+
+    string bookTitle = "";
+    string bookAuthor = "";
+
+    Book? book = null;
+
+    book = _context.Book.Find(Model.BookCodeNumber);
+
+    if (book != null)
+    {
+        bookTitle = book.Title;
+        bookAuthor = book.Author;
+    }
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2 class="card-title">Are you sure you want<br>to return your book?</h2>
+                    <p>@bookTitle<br>@bookAuthor</p>
+                </div>
+                <div class="card-body text-center">
+                    <form method="post" asp-action="Return">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="hidden" name="bookCodeNumber" value="@book" />
+                        <button type="submit" class="btn btn-primary">Yes</button>
+                        <a href="#" class="btn btn-secondary">No</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
